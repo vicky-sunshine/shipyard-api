@@ -3,13 +3,14 @@ require_relative '../config/shipyard_config'
 
 #
 class Shipyard
-  attr_accessor :host, :port, :access_token, :service_key, :response
+  attr_accessor :host, :port, :username, :access_token, :service_key, :response
   def initialize(host, port)
     @host ||= host || '127.0.0.1'
     @port ||= port || 8080
   end
 
   def login(option)
+    @username = option[:username]
     @response = post('/auth/login', option)
 
     if @response.code.to_i == 200
