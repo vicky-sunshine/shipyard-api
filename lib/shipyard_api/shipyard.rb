@@ -1,5 +1,5 @@
 require 'json'
-require '../config/shipyard_config.rb'
+require_relative '../config/shipyard_config'
 
 #
 class Shipyard
