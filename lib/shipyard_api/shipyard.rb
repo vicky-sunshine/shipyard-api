@@ -1,4 +1,5 @@
 require 'json'
+require 'http'
 require_relative '../config/shipyard_config'
 
 #
@@ -11,78 +12,37 @@ class Shipyard
 
   def login(option)
     @username = option[:username]
-    @response = post('/auth/login', option)
+    @response = HTTP.post("http://#{host}:#{port}/auth/login", json: option)
 
-    if @response.code.to_i == 200
-      body = JSON.load(@response.read_body)
-      @access_token = body['auth_token']
+    if @response.code == 200
+      body = JSON.load(@response.to_s)
+      @access_token = "#{@username}:#{body['auth_token']}"
     end
 
-    @response.code.to_i
+    @access_token
   end
 
   def create_service_key
-    @response = post_with_access_token('/api/servicekeys', {})
-    if @response.code.to_i == 200
-      body = JSON.load(@response.read_body)
-      @service_key = body['key']
+    @response = HTTP.headers('x-access-token' => @access_token)
+                    .post("http://#{host}:#{port}/api/servicekeys", json: {})
+
+    if @response.code == 200
+      body = JSON.load(@response.to_s)
+      @service_key = "#{@username}:#{body['key']}"
     end
 
-    @response.code.to_i
+    @service_key
   end
 
-  # def list_container
-  #
+  def list_container
+    @response = HTTP.headers('x-access-token' => @access_token)
+                    .get("http://#{host}:#{port}/containers/json")
+    JSON.load(@response.to_s)
+  end
+
+  # def get_container(id)
+  #   @response = HTTP.headers('x-access-token' => @access_token)
+  #                   .get("http://#{host}:#{port}/containers/#{id}/json")
+  #   JSON.load(@response.to_s)
   # end
-  #
-  # def get_container
-  # end
-  #
-  # def create_container
-  #
-  # end
-
-  private
-
-  def post(api, option)
-    http = Net::HTTP.new(host, port)
-
-    request = Net::HTTP::Post.new(api)
-    request['content-type'] = 'application/json'
-    request.body = option.to_json
-
-    http.request(request)
-  end
-
-  def post_with_access_token(api, option)
-    http = Net::HTTP.new(host, port)
-
-    request = Net::HTTP::Post.new(api)
-    request['content-type'] = 'application/json'
-    request['x-access-token'] = "#{@username}:#{@access_token}"
-    request.body = option.to_json
-
-    http.request(request)
-  end
-
-  def post_with_service_key(api, option)
-    http = Net::HTTP.new(host, port)
-
-    request = Net::HTTP::Post.new(api)
-    request['content-type'] = 'application/json'
-    request['x-service-key'] = "#{@username}:#{@service_key}"
-    request.body = option.to_json
-
-    http.request(request)
-  end
-
-  def get_with_service_key(api)
-    http = Net::HTTP.new(host, port)
-
-    request = Net::HTTP::Get.new(api)
-    request['content-type'] = 'application/json'
-    request['x-service-key'] = "#{@username}:#{@service_key}"
-
-    http.request(request)
-  end
 end
