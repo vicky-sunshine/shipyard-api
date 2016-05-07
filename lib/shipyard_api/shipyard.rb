@@ -1,9 +1,8 @@
 require 'json'
 require 'http'
 require_relative './config/shipyard_config'
-require_relative './container.rb'
 
-#
+# 
 class Shipyard
   attr_accessor :host, :username, :access_token, :service_key
   def initialize(ip, port)
@@ -86,20 +85,20 @@ class Shipyard
     end
     container
   end
-end
 
-private
+  private
 
-def generate_create_template(option)
-  template = ShipyardConfig::CREATE_TEMPLATE.clone
-  template[:Image] = option[:image]
+  def generate_create_template(option)
+    template = ShipyardConfig::CREATE_TEMPLATE.clone
+    template[:Image] = option[:image]
 
-  unless option[:portBindings].empty?
-    option[:portBindings].each do |k, v|
-      template[:HostConfig][:PortBindings][k] = [{ HostPort: v }]
+    unless option[:portBindings].empty?
+      option[:portBindings].each do |k, v|
+        template[:HostConfig][:PortBindings][k] = [{ HostPort: v }]
+      end
     end
-  end
 
-  template[:Cmd] = option[:command]
-  template
+    template[:Cmd] = option[:command]
+    template
+  end
 end
